@@ -44,4 +44,8 @@ void server_respond(server_session_t *, string_t, string_t, data_t, http_field_t
 void server_ok(server_session_t *, string_t, data_t, http_field_t *, size_t);
 void server_plain(server_session_t *, data_t, http_field_t *, size_t);
 
+void server_respond_chunk(server_session_t *session, string_t content);
+void server_respond_chunk_start(server_session_t *session);
+void server_respond_chunk_end(server_session_t *session);
+
 #endif /* REACTOR_SERVER_H_INCLUDED */

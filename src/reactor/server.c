@@ -193,3 +193,38 @@ void server_plain(server_session_t *session, data_t body, http_field_t *fields, 
 {
   server_respond(session, string("200 OK"), string("text/plain"), body, fields, fields_count);
 }
+
+void server_respond_chunk(server_session_t *session, string_t content){
+
+  session->flags |= SERVER_SESSION_READY;
+  if (!reactor_likely(stream_is_open(&session->stream)))
+  {
+      server_session_close(session);
+      return;
+  }
+
+  http_write_chunk_response(&session->stream, content);
+  // Flush and loop once to send the chunk immediately
+  stream_flush(&session->stream);
+  reactor_loop_once();
+}
+
+void server_respond_chunk_start(server_session_t *session){
+
+  session->flags |= SERVER_SESSION_READY;
+  if (!reactor_likely(stream_is_open(&session->stream)))
+  {
+      server_session_close(session);
+      return;
+  }
+
+  http_write_chunk_start_response(&session->stream);
+  // Flush and loop once to send the headers immediately
+  stream_flush(&session->stream);
+  reactor_loop_once();
+}
+
+void server_respond_chunk_end(server_session_t *session){
+    // Evaluates to 0\n\r\n\r to end the chunked response
+    server_respond_chunk(session, string(""));
+}

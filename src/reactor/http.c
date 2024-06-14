@@ -295,3 +295,36 @@ void http_write_response(stream_t *stream, string_t status, string_t date, strin
   else
     http_write_response_extended(stream, status, date, type, body, fields, fields_count);
 }
+
+inline __attribute__((always_inline, flatten))
+void http_write_chunk_response(stream_t *stream, data_t content)
+{
+  // Push the chunked data to the stream
+  char chunk_size[10];
+  sprintf(chunk_size, "%lx\r\n", data_size(content));
+  size_t size = strlen(chunk_size) + data_size(content) + 2;
+  void *p = stream_allocate(stream, size);
+
+  http_push_data(&p, string(chunk_size));
+  http_push_data(&p, content);
+  http_push_data(&p, string("\r\n"));
+
+}
+
+inline __attribute__((always_inline, flatten))
+void http_write_chunk_start_response(stream_t *stream)
+{
+    // Push End of Stream
+    const char *headers =   "HTTP/1.1 200 OK\r\n"
+                            "Content-Type: text/plain\r\n"
+                            "Cache-Control: no-cache\r\n"
+                            "Transfer-Encoding: chunked\r\n"
+                            "Connection: keep-alive\r\n"
+                            "Keep-Alive: timeout=5\r\n"
+                            "\r\n";
+
+    size_t size = strlen(headers);
+    void *p = stream_allocate(stream, size);
+
+    http_push_data(&p, string(headers));
+}
